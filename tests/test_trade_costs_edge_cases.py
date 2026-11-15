@@ -24,3 +24,11 @@ class CostEdgeCases(unittest.TestCase):
             TradeCost(1,0,0,0)
         with self.assertRaises(ValueError):
             TradeCost(math.nan,0,0,0)
+
+    def test_nonfinite_prices_rejected(self):
+        for value in (math.nan, math.inf, -math.inf):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    net_return(value, 100, TradeCost(0,0,0,0))
+                with self.assertRaises(ValueError):
+                    net_return(100, value, TradeCost(0,0,0,0))
