@@ -1,0 +1,36 @@
+name: Autopilot Research Queue
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build read-only research manifest
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, datetime
+          root=pathlib.Path('.')
+          manifest={
+            'generated_at_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'repository': '${{ github.repository }}',
+            'mode': 'read_only',
+            'codex_executed': False,
+            'approval_required': ['secrets','deployment','live_trading','merge'],
+            'files': sorted(str(p) for p in root.rglob('*') if p.is_file() and '.git' not in p.parts)[:300],
+            'next_action': 'Review Draft PR and identify one bounded, testable improvement'
+          }
+          pathlib.Path('autopilot-manifest.json').write_text(json.dumps(manifest,indent=2))
+          print(json.dumps(manifest,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: autopilot-research-manifest
+          path: autopilot-manifest.json
+          retention-days: 7

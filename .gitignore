@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+__pycache__/
+.venv/
+data/
+datasets/
+backtests/raw/
+*.zip
+*.parquet
