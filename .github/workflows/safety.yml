@@ -1,0 +1,28 @@
+name: Autopilot Safety Checks
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify agent rules and no obvious secrets
+        shell: bash
+        run: |
+          test -s AGENTS.md
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
+          bad=[]
+          for p in Path('.').rglob('*'):
+              if not p.is_file() or '.git' in p.parts or p.stat().st_size > 500_000: continue
+              if p.suffix.lower() not in {'.py','.md','.yml','.yaml','.json','.toml','.txt','.env'}: continue
+              s=p.read_text(errors='replace')
+              if re.search(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',s): bad.append(str(p))
+          if bad:
+              print('Potential private keys:', bad);sys.exit(1)
+          print('Basic safety checks passed; full tests not yet configured')
+          PY
