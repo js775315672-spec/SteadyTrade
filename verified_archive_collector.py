@@ -48,7 +48,9 @@ def download_verified_month(symbol, interval, year, month, output_dir, *,
         _fetch_limited(manifest["checksum_url"], tmp_checksum, 4096, opener)
         checksum = tmp_checksum.read_text(encoding="utf-8")
         receipt = verify_checksum(tmp_zip, checksum)
-        # Atomic hard link within the same directory filesystem. No overwrite.\n        os.link(tmp_zip, target)\n        return {"path":str(target), "sha256":receipt["sha256"],
+        # Atomic hard link within the same directory filesystem. No overwrite.
+        os.link(tmp_zip, target)
+        return {"path":str(target), "sha256":receipt["sha256"],
                 "bytes":target.stat().st_size, "source_url":manifest["url"],
                 "timestamp_unit":manifest["timestamp_unit"],
                 "verified":True}
