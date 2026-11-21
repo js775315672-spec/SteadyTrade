@@ -5,7 +5,6 @@ Every file must match its official checksum before becoming usable.
 """
 from pathlib import Path
 from urllib.request import urlopen
-from urllib.error import HTTPError, URLError
 import os
 import tempfile
 
@@ -49,14 +48,7 @@ def download_verified_month(symbol, interval, year, month, output_dir, *,
         _fetch_limited(manifest["checksum_url"], tmp_checksum, 4096, opener)
         checksum = tmp_checksum.read_text(encoding="utf-8")
         receipt = verify_checksum(tmp_zip, checksum)
-        # Exclusive destination creation; never replace a preexisting archive.
-        with target.open("xb") as output, tmp_zip.open("rb") as source:
-            while True:
-                chunk = source.read(1024 * 1024)
-                if not chunk:
-                    break
-                output.write(chunk)
-        return {"path":str(target), "sha256":receipt["sha256"],
+        # Atomic hard link within the same directory filesystem. No overwrite.\n        os.link(tmp_zip, target)\n        return {"path":str(target), "sha256":receipt["sha256"],
                 "bytes":target.stat().st_size, "source_url":manifest["url"],
                 "timestamp_unit":manifest["timestamp_unit"],
                 "verified":True}
